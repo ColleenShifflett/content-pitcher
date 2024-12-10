@@ -15,8 +15,8 @@ st.title("Content and Queries Analyzer")
 st.write("Upload your content and query CSV files to analyze missing keywords.")
 
 # File upload widgets
-content_file = st.file_uploader("Upload Content CSV", type="csv")
-queries_file = st.file_uploader("Upload Queries CSV", type="csv")
+content_file = st.file_uploader("Upload Content CSV (Content, URL)", type="csv")
+queries_file = st.file_uploader("Upload Queries CSV (queries, avgpos)", type="csv")
 
 # Function to tokenize text by converting to lowercase and splitting by words
 def tokenize(text):
