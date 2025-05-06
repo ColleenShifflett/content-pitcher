@@ -87,7 +87,7 @@ def find_missing_queries_with_recommendations(content_df, queries_df):
                 best_match['token_matches'] = url_matches
 
         # Make recommendation based on the best match
-        if best_match['score'] > 0:
+        if best_match['score'] > 0.3:  # Changed from > 0 to > 0.3 to be more selective
             recommendations.append({
                 'queries': query,
                 'avgpos': avgpos,
@@ -100,7 +100,7 @@ def find_missing_queries_with_recommendations(content_df, queries_df):
                 'queries': query,
                 'avgpos': avgpos,
                 'recommendation': "Create new content",
-                'relevance_score': 0,
+                'relevance_score': round(best_match['score'] * 100, 2) if best_match['score'] > 0 else 0,
                 'match_quality': "None"
             })
 
