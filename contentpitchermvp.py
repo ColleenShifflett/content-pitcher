@@ -10,8 +10,6 @@ import streamlit as st
 from io import StringIO
 import re
 import altair as alt
-import matplotlib.pyplot as plt
-import numpy as np
 
 # Set page configuration
 st.set_page_config(
@@ -160,56 +158,15 @@ if content_file is not None and queries_file is not None:
         recommendation_counts = filtered_df['recommendation'].value_counts().reset_index()
         recommendation_counts.columns = ['recommendation', 'count']
         
-        # Create two columns for visualizations
-        col1, col2 = st.columns(2)
-        
-        with col1:
-            # Create Pie Chart for recommendation distribution using matplotlib
-            fig1, ax1 = plt.subplots(figsize=(7, 5))
-            labels = recommendation_counts['recommendation']
-            sizes = recommendation_counts['count']
-            
-            # Create a list of colors for each unique recommendation
-            colors = plt.cm.Paired(np.linspace(0, 1, len(recommendation_counts)))
-            
-            # Create pie chart
-            wedges, texts, autotexts = ax1.pie(
-                sizes, 
-                labels=None,  # No labels on the pie itself
-                autopct='%1.1f%%',
-                shadow=False, 
-                startangle=90,
-                colors=colors
-            )
-            
-            # Improve legibility of percentage text
-            for autotext in autotexts:
-                autotext.set_color('white')
-                autotext.set_fontsize(9)
-            
-            # Add legend
-            ax1.legend(
-                wedges, 
-                labels,
-                title="Recommendation Types",
-                loc="center left",
-                bbox_to_anchor=(1, 0, 0.5, 1)
-            )
-            
-            ax1.set_title('Recommendation Distribution')
-            ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle
-            st.pyplot(fig1)
-        
-        with col2:
-            # Create a bar chart using Altair
-            chart = alt.Chart(recommendation_counts).mark_bar().encode(
-                x=alt.X('recommendation:N', title='Recommendation', sort='-y'),
-                y=alt.Y('count:Q', title='Count'),
-                color=alt.Color('recommendation:N', scale=alt.Scale(scheme='category10'))
-            ).properties(
-                title='Recommendation Counts'
-            )
-            st.altair_chart(chart, use_container_width=True)
+        # Create a bar chart using Altair
+        chart = alt.Chart(recommendation_counts).mark_bar().encode(
+            x=alt.X('recommendation:N', title='Recommendation', sort='-y'),
+            y=alt.Y('count:Q', title='Count'),
+            color=alt.Color('recommendation:N', scale=alt.Scale(scheme='category10'))
+        ).properties(
+            title='Recommendation Counts'
+        )
+        st.altair_chart(chart, use_container_width=True)
         
         # Visualization 2: Match Quality Distribution
         st.subheader("Match Quality Distribution")
@@ -298,36 +255,60 @@ if content_file is not None and queries_file is not None:
         summary_df = pd.DataFrame(summary_data)
         st.table(summary_df)
         
-        # Display percentage of queries matched vs not matched
-        col1, col2 = st.columns(2)
+        # Create a pie chart for matched vs not matched using Altair
+        match_data = pd.DataFrame({
+            'Status': ['Matched', 'Not Matched'],
+            'Count': [
+                len(filtered_df[filtered_df['recommendation'] != "Create new content"]),
+                len(filtered_df[filtered_df['recommendation'] == "Create new content"])
+            ]
+        })
         
-        with col1:
-            match_percent = (len(filtered_df[filtered_df['recommendation'] != "Create new content"]) / len(filtered_df)) * 100
-            not_match_percent = 100 - match_percent
+        if len(match_data) > 0 and match_data['Count'].sum() > 0:
+            # Calculate percentages
+            match_data['Percentage'] = match_data['Count'] / match_data['Count'].sum() * 100
+            match_data['Angle'] = match_data['Count'] / match_data['Count'].sum() * 2 * 3.14159
             
-            fig, ax = plt.subplots(figsize=(5, 5))
-            ax.pie(
-                [match_percent, not_match_percent],
-                labels=['Matched', 'Not Matched'],
-                autopct='%1.1f%%',
-                colors=['#1f77b4', '#d62728'],
-                startangle=90
+            # Create a color scale for the pie chart
+            pie_colors = ['#1f77b4', '#d62728']
+            
+            # Create the pie chart using Altair
+            pie_chart = alt.Chart(match_data).mark_arc().encode(
+                theta=alt.Theta(field="Angle", type="quantitative"),
+                color=alt.Color(
+                    field="Status",
+                    type="nominal",
+                    scale=alt.Scale(range=pie_colors)
+                ),
+                tooltip=[
+                    alt.Tooltip("Status:N", title="Status"),
+                    alt.Tooltip("Count:Q", title="Count"),
+                    alt.Tooltip("Percentage:Q", title="Percentage", format=".1f")
+                ]
+            ).properties(
+                title='Percentage of Queries Matched',
+                width=300,
+                height=300
             )
-            ax.set_title('Percentage of Queries Matched')
-            ax.axis('equal')
-            st.pyplot(fig)
+            
+            # Add text to show percentages
+            text = alt.Chart(match_data).mark_text(radius=100).encode(
+                theta=alt.Theta(field="Angle", type="quantitative", stack=True),
+                text=alt.Text("Percentage:Q", format=".1f")
+            )
+            
+            st.altair_chart(pie_chart, use_container_width=True)
         
-        with col2:
-            # Display the top recommended URLs
-            if 'recommendation' in filtered_df.columns and any(filtered_df['recommendation'] != "Create new content"):
-                # Extract URL from recommendation column
-                url_df = filtered_df[filtered_df['recommendation'] != "Create new content"].copy()
-                url_df['URL'] = url_df['recommendation'].str.replace('Add to ', '')
-                url_counts = url_df['URL'].value_counts().reset_index()
-                url_counts.columns = ['URL', 'Count']
-                
-                st.write("### Top Recommended URLs")
-                st.write(url_counts.head(10))
+        # Display the top recommended URLs
+        if 'recommendation' in filtered_df.columns and any(filtered_df['recommendation'] != "Create new content"):
+            # Extract URL from recommendation column
+            url_df = filtered_df[filtered_df['recommendation'] != "Create new content"].copy()
+            url_df['URL'] = url_df['recommendation'].str.replace('Add to ', '')
+            url_counts = url_df['URL'].value_counts().reset_index()
+            url_counts.columns = ['URL', 'Count']
+            
+            st.write("### Top Recommended URLs")
+            st.write(url_counts.head(10))
 else:
     st.write("Please upload both content and queries CSV files to start the analysis.")
     
