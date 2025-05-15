@@ -2,7 +2,7 @@
 
 A Streamlit application that helps content marketers analyze their existing content against search queries to identify keyword optimization opportunities.
 
-![Content Pitcher](https://raw.githubusercontent.com/colleenshifflett/content-pitcher/blob/main/screenshot.png)
+![Content Pitcher](./screenshot.png)
 
 ## Features
 
