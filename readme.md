@@ -2,7 +2,7 @@
 
 A Streamlit application that helps content marketers analyze their existing content against search queries to identify keyword optimization opportunities.
 
-![Content Pitcher](https://raw.githubusercontent.com/username/content-pitcher/main/screenshot.png)
+![Content Pitcher](https://raw.githubusercontent.com/colleenshifflett/content-pitcher/main/screenshot.png)
 
 ## Features
 
@@ -23,7 +23,7 @@ A Streamlit application that helps content marketers analyze their existing cont
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/username/content-pitcher.git
+   git clone https://github.com/colleenshifflett/content-pitcher.git
    cd content-pitcher
    ```
 
